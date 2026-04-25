@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distance Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #141720;
+      --panel:     #1b1f2b;
+      --border:    rgba(255,255,255,0.07);
+      --border-hi: rgba(255,255,255,0.14);
+      --text:      #e8eaf0;
+      --muted:     #6b7080;
+      --accent-a:  #7b6ef6;
+      --accent-b:  #f26d50;
+      --accent-c:  #4ec9b0;
+      --line:      #3b82f6;
+      --grid:      rgba(255,255,255,0.04);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 680px;
+    }
+
+    header {
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(1.1rem, 3vw, 1.35rem);
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    header h1 span {
+      color: var(--text);
+    }
+
+    header p {
+      margin-top: 0.4rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── Input grid ── */
+    .inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .point-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      transition: border-color 0.2s;
+    }
+
+    .point-card:hover { border-color: var(--border-hi); }
+
+    .point-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-a { background: var(--accent-a); box-shadow: 0 0 8px var(--accent-a); }
+    .dot-b { background: var(--accent-b); box-shadow: 0 0 8px var(--accent-b); }
+
+    .point-label span {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .coord-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .coord-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .coord-group label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      width: 10px;
+      flex-shrink: 0;
+    }
+
+    .coord-group input {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 1rem;
+      padding: 0.55rem 0.75rem;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s, background 0.15s;
+      -moz-appearance: textfield;
+    }
+
+    .coord-group input::-webkit-outer-spin-button,
+    .coord-group input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .coord-group input:focus {
+      border-color: var(--border-hi);
+      background: #20253a;
+    }
+
+    /* ── Stats row ── */
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1.1rem;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .stat-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: color 0.2s;
+    }
+
+    #dist-display { color: var(--accent-c); font-size: 1.35rem; }
+
+    /* ── Canvas ── */
+    .canvas-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* ── Formula ── */
+    .formula-bar {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1.1rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .formula-bar::before {
+      content: 'f(x)';
+      font-size: 0.68rem;
+      color: var(--accent-c);
+      background: rgba(78,201,176,0.1);
+      padding: 2px 8px;
+      border-radius: 5px;
+      flex-shrink: 0;
+    }
+
+    #formula-text { color: var(--text); }
+
+    /* ── Reset button ── */
+    .actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    button {
+      background: transparent;
+      border: 1px solid var(--border-hi);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.5rem 1.1rem;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    button:hover {
+      color: var(--text);
+      border-color: var(--border-hi);
+      background: rgba(255,255,255,0.04);
+    }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      .inputs { grid-template-columns: 1fr; }
+      .stats  { grid-template-columns: 1fr 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <h1>// <span>distance</span> calculator</h1>
+    <p>Euclidean distance between two points in 2D space</p>
+  </header>
+
+  <div class="inputs">
+    <div class="point-card">
+      <div class="point-label">
+        <div class="dot dot-a"></div>
+        <span>Point A</span>
+      </div>
+      <div class="coord-row">
+        <div class="coord-group">
+          <label>x</label>
+          <input type="number" id="ax" value="0" step="any" oninput="update()" />
+        </div>
+        <div class="coord-group">
+          <label>y</label>
+          <input type="number" id="ay" value="1" step="any" oninput="update()" />
+        </div>
+      </div>
+    </div>
+
+    <div class="point-card">
+      <div class="point-label">
+        <div class="dot dot-b"></div>
+        <span>Point B</span>
+      </div>
+      <div class="coord-row">
+        <div class="coord-group">
+          <label>x</label>
+          <input type="number" id="bx" value="1" step="any" oninput="update()" />
+        </div>
+        <div class="coord-group">
+          <label>y</label>
+          <input type="number" id="by" value="1" step="any" oninput="update()" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Δx</div>
+      <div class="stat-value" id="dx-display">1</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Δy</div>
+      <div class="stat-value" id="dy-display">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Distance</div>
+      <div class="stat-value" id="dist-display">1.0000</div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="canvas" width="680" height="320"></canvas>
+  </div>
+
+  <div class="formula-bar">
+    <span id="formula-text"></span>
+  </div>
+
+  <div class="actions">
+    <button onclick="resetPoints()">↺ Reset</button>
+  </div>
+
+  <footer>√( (x₂ − x₁)² + (y₂ − y₁)² )</footer>
+</div>
+
+<script>
+  function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+  function update() {
+    const ax = val('ax'), ay = val('ay'), bx = val('bx'), by = val('by');
+    const dx = bx - ax, dy = by - ay;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    document.getElementById('dx-display').textContent   = dx.toFixed(3);
+    document.getElementById('dy-display').textContent   = dy.toFixed(3);
+    document.getElementById('dist-display').textContent = dist.toFixed(4);
+    document.getElementById('formula-text').textContent =
+      `√( (${bx}−${ax})² + (${by}−${ay})² )  =  √( ${(dx*dx).toFixed(2)} + ${(dy*dy).toFixed(2)} )  =  ${dist.toFixed(4)}`;
+
+    draw(ax, ay, bx, by, dist);
+  }
+
+  function draw(ax, ay, bx, by, dist) {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const pad = 56;
+    const allX = [ax, bx, 0], allY = [ay, by, 0];
+    let minX = Math.min(...allX) - 2, maxX = Math.max(...allX) + 2;
+    let minY = Math.min(...allY) - 2, maxY = Math.max(...allY) + 2;
+
+    const rangeX = maxX - minX, rangeY = maxY - minY;
+    const aspect = (W - pad * 2) / (H - pad * 2);
+    if (rangeX / rangeY < aspect) {
+      const extra = (rangeY * aspect - rangeX) / 2;
+      minX -= extra; maxX += extra;
+    } else {
+      const extra = (rangeX / aspect - rangeY) / 2;
+      minY -= extra; maxY += extra;
+    }
+
+    const sx = (W - pad * 2) / (maxX - minX);
+    const sy = (H - pad * 2) / (maxY - minY);
+    const cx = (x) => pad + (x - minX) * sx;
+    const cy = (y) => H - pad - (y - minY) * sy;
+
+    // grid lines
+    for (let gx = Math.ceil(minX); gx <= Math.floor(maxX); gx++) {
+      ctx.beginPath();
+      ctx.strokeStyle = gx === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)';
+      ctx.lineWidth   = gx === 0 ? 1 : 0.5;
+      ctx.moveTo(cx(gx), pad); ctx.lineTo(cx(gx), H - pad);
+      ctx.stroke();
+    }
+    for (let gy = Math.ceil(minY); gy <= Math.floor(maxY); gy++) {
+      ctx.beginPath();
+      ctx.strokeStyle = gy === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)';
+      ctx.lineWidth   = gy === 0 ? 1 : 0.5;
+      ctx.moveTo(pad, cy(gy)); ctx.lineTo(W - pad, cy(gy));
+      ctx.stroke();
+    }
+
+    // axis tick labels
+    ctx.font = '11px "DM Mono", monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.textAlign = 'center';
+    for (let gx = Math.ceil(minX); gx <= Math.floor(maxX); gx++) {
+      if (gx !== 0) ctx.fillText(gx, cx(gx), H - pad + 16);
+    }
+    ctx.textAlign = 'right';
+    for (let gy = Math.ceil(minY); gy <= Math.floor(maxY); gy++) {
+      if (gy !== 0) ctx.fillText(gy, pad - 8, cy(gy) + 4);
+    }
+
+    // dashed legs
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx(ax), cy(ay)); ctx.lineTo(cx(bx), cy(ay)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx(bx), cy(ay)); ctx.lineTo(cx(bx), cy(by)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // delta labels
+    ctx.font = '11px "DM Mono", monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.textAlign = 'center';
+    const midXc = (cx(ax) + cx(bx)) / 2, midYc = (cy(ay) + cy(by)) / 2;
+    ctx.fillText('Δx = ' + (bx - ax).toFixed(2), (cx(ax) + cx(bx)) / 2, cy(ay) + 16);
+    ctx.textAlign = 'left';
+    ctx.fillText('Δy = ' + (by - ay).toFixed(2), cx(bx) + 6, (cy(ay) + cy(by)) / 2);
+
+    // distance line with glow
+    ctx.shadowColor = '#3b82f6';
+    ctx.shadowBlur  = 12;
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth   = 2.5;
+    ctx.beginPath(); ctx.moveTo(cx(ax), cy(ay)); ctx.lineTo(cx(bx), cy(by)); ctx.stroke();
+    ctx.shadowBlur  = 0;
+
+    // distance label along line
+    const angle = Math.atan2(cy(by) - cy(ay), cx(bx) - cx(ax));
+    ctx.save();
+    ctx.translate(midXc, midYc);
+    ctx.rotate(angle);
+    ctx.font = '12px "DM Mono", monospace';
+    ctx.fillStyle = '#4ec9b0';
+    ctx.textAlign = 'center';
+    ctx.fillText(dist.toFixed(3), 0, -10);
+    ctx.restore();
+
+    // point A
+    ctx.shadowColor = '#7b6ef6';
+    ctx.shadowBlur  = 16;
+    ctx.fillStyle   = '#7b6ef6';
+    ctx.beginPath(); ctx.arc(cx(ax), cy(ay), 6, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur  = 0;
+    ctx.font = '12px "DM Mono", monospace';
+    ctx.fillStyle = '#a89ff8';
+    ctx.textAlign = 'left';
+    ctx.fillText(`A (${ax}, ${ay})`, cx(ax) + 10, cy(ay) - 8);
+
+    // point B
+    ctx.shadowColor = '#f26d50';
+    ctx.shadowBlur  = 16;
+    ctx.fillStyle   = '#f26d50';
+    ctx.beginPath(); ctx.arc(cx(bx), cy(by), 6, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur  = 0;
+    ctx.fillStyle = '#f5a088';
+    ctx.textAlign = 'left';
+    ctx.fillText(`B (${bx}, ${by})`, cx(bx) + 10, cy(by) - 8);
+  }
+
+  function resetPoints() {
+    document.getElementById('ax').value = 0;
+    document.getElementById('ay').value = 1;
+    document.getElementById('bx').value = 1;
+    document.getElementById('by').value = 1;
+    update();
+  }
+
+  update();
+</script>
+</body>
+</html>
