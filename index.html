@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,215 +8,433 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg:           #f0f2f5;
+      --card:         #ffffff;
+      --surface:      #f7f8fa;
+      --border:       #e5e7eb;
+      --text:         #1a1a2e;
+      --muted:        #9098a9;
+      --sub-text:     #4b5563;
+      --result-bg:    #1a1a2e;
+      --result-text:  #ffffff;
+      --result-label: #6b7897;
+      --badge-a-bg:   #ede9fe;
+      --badge-a-fg:   #6d28d9;
+      --badge-b-bg:   #fde8e0;
+      --badge-b-fg:   #c2410c;
+      --focus:        #7c3aed;
+      --history-sep:  #f0f2f5;
+      --toggle-bg:    #e5e7eb;
+      --toggle-thumb: #ffffff;
+    }
+
+    [data-theme="dark"] {
+      --bg:           #0e1117;
+      --card:         #161b25;
+      --surface:      #1e2433;
+      --border:       #2a3045;
+      --text:         #e8eaf0;
+      --muted:        #5a6480;
+      --sub-text:     #9098a9;
+      --result-bg:    #0a0d14;
+      --result-text:  #ffffff;
+      --result-label: #4a5578;
+      --badge-a-bg:   #2d2060;
+      --badge-a-fg:   #a78bfa;
+      --badge-b-bg:   #3a1a0e;
+      --badge-b-fg:   #fb923c;
+      --focus:        #a78bfa;
+      --history-sep:  #1e2433;
+      --toggle-bg:    #7c3aed;
+      --toggle-thumb: #ffffff;
+    }
+
     body {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f0f2f5;
+      background: var(--bg);
       font-family: 'DM Sans', sans-serif;
       padding: 2rem 1rem;
+      transition: background 0.2s;
     }
 
     .card {
-      background: #ffffff;
+      background: var(--card);
       border-radius: 20px;
-      padding: 2.5rem 2rem;
+      padding: 2rem 2rem 1.75rem;
       width: 100%;
       max-width: 420px;
-      box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 32px rgba(0,0,0,0.1);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+
+    [data-theme="dark"] .card {
+      box-shadow: 0 4px 40px rgba(0,0,0,0.4);
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
     }
 
     h1 {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       font-weight: 500;
-      color: #1a1a2e;
-      margin-bottom: 0.3rem;
+      color: var(--text);
     }
 
     .subtitle {
-      font-size: 0.82rem;
-      color: #9098a9;
-      margin-bottom: 2rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
     }
 
+    /* ── Dark mode toggle ── */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .toggle-icon {
+      font-size: 0.85rem;
+      line-height: 1;
+    }
+
+    .toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .toggle input { display: none; }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--toggle-bg);
+      border-radius: 999px;
+      transition: background 0.2s;
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 14px;
+      height: 14px;
+      background: var(--toggle-thumb);
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .toggle input:checked + .toggle-track + .toggle-thumb { transform: translateX(16px); }
+
+    /* ── Inputs ── */
     .points {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      gap: 0.85rem;
+      margin-bottom: 1.25rem;
     }
 
     .point-block {
-      background: #f7f8fa;
+      background: var(--surface);
       border-radius: 14px;
-      padding: 1.1rem 1.25rem;
+      padding: 1rem 1.2rem;
+      transition: background 0.2s;
     }
 
     .point-header {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 0.85rem;
+      margin-bottom: 0.8rem;
     }
 
     .badge {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 500;
-      flex-shrink: 0;
     }
 
-    .badge-a { background: #ede9fe; color: #6d28d9; }
-    .badge-b { background: #fde8e0; color: #c2410c; }
+    .badge-a { background: var(--badge-a-bg); color: var(--badge-a-fg); }
+    .badge-b { background: var(--badge-b-bg); color: var(--badge-b-fg); }
 
     .point-header span {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 500;
-      color: #6b7280;
-      letter-spacing: 0.04em;
+      color: var(--muted);
     }
 
-    .coord-row {
-      display: flex;
-      gap: 10px;
-    }
+    .coord-row { display: flex; gap: 10px; }
 
     .field {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
     }
 
     .field label {
-      font-size: 0.72rem;
-      color: #9098a9;
+      font-size: 0.7rem;
+      color: var(--muted);
       font-family: 'DM Mono', monospace;
       padding-left: 2px;
     }
 
     .field input {
       width: 100%;
-      background: #ffffff;
-      border: 1.5px solid #e5e7eb;
+      background: var(--card);
+      border: 1.5px solid var(--border);
       border-radius: 9px;
-      padding: 0.6rem 0.75rem;
+      padding: 0.55rem 0.7rem;
       font-size: 1rem;
       font-family: 'DM Mono', monospace;
-      color: #1a1a2e;
+      color: var(--text);
       outline: none;
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, background 0.2s, color 0.2s;
       -moz-appearance: textfield;
     }
 
     .field input::-webkit-outer-spin-button,
     .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
-    .field input:focus { border-color: #7c3aed; }
+    .field input:focus { border-color: var(--focus); }
 
+    /* ── Result ── */
     .result-block {
-      background: #1a1a2e;
+      background: var(--result-bg);
       border-radius: 14px;
-      padding: 1.4rem 1.5rem;
+      padding: 1.2rem 1.4rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
+      transition: background 0.2s;
     }
 
     .result-label {
-      font-size: 0.78rem;
-      color: #6b7897;
-      letter-spacing: 0.06em;
+      font-size: 0.72rem;
+      color: var(--result-label);
+      letter-spacing: 0.07em;
       text-transform: uppercase;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.25rem;
     }
 
     .result-value {
       font-family: 'DM Mono', monospace;
-      font-size: 2rem;
+      font-size: 1.9rem;
       font-weight: 500;
-      color: #ffffff;
+      color: var(--result-text);
       letter-spacing: -0.02em;
+      word-break: break-all;
     }
 
-    .result-icon {
-      font-size: 2rem;
-      opacity: 0.2;
+    /* ── Copy button ── */
+    .copy-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.5);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      padding: 0.4rem 0.7rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      margin-left: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      width: auto;
     }
 
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.85);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .copy-btn.copied {
+      color: #4ec9b0;
+      border-color: rgba(78,201,176,0.3);
+    }
+
+    /* ── Sub stats ── */
     .sub-stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 1.5rem;
+      gap: 8px;
+      margin-bottom: 1.25rem;
     }
 
     .sub-stat {
-      background: #f7f8fa;
+      background: var(--surface);
       border-radius: 11px;
-      padding: 0.8rem 1rem;
+      padding: 0.75rem 1rem;
+      transition: background 0.2s;
     }
 
     .sub-stat-label {
       font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      color: #9098a9;
-      margin-bottom: 0.3rem;
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
     }
 
     .sub-stat-value {
       font-family: 'DM Mono', monospace;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 500;
-      color: #1a1a2e;
+      color: var(--text);
     }
 
-    .formula {
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.25rem 0;
+      transition: background 0.2s;
+    }
+
+    /* ── History ── */
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .history-title {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .clear-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      cursor: pointer;
+      padding: 0;
+      width: auto;
+      transition: color 0.15s;
+    }
+
+    .clear-btn:hover { color: var(--text); background: transparent; border: none; }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .history-empty {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      text-align: center;
+      padding: 0.75rem 0;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0.75rem;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background 0.12s;
+      gap: 8px;
+    }
+
+    .history-item:hover { background: var(--surface); }
+
+    .history-coords {
       font-family: 'DM Mono', monospace;
       font-size: 0.75rem;
-      color: #9098a9;
-      background: #f7f8fa;
-      border-radius: 10px;
-      padding: 0.75rem 1rem;
-      line-height: 1.7;
-      margin-bottom: 1.25rem;
-      word-break: break-word;
+      color: var(--muted);
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .formula strong { color: #4b5563; font-weight: 500; }
+    .history-coords b {
+      color: var(--text);
+      font-weight: 500;
+    }
 
-    button {
+    .history-dist {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--focus);
+      flex-shrink: 0;
+    }
+
+    /* ── Reset ── */
+    .reset-btn {
       width: 100%;
       background: transparent;
-      border: 1.5px solid #e5e7eb;
+      border: 1.5px solid var(--border);
       border-radius: 10px;
-      color: #9098a9;
+      color: var(--muted);
       font-family: 'DM Sans', sans-serif;
-      font-size: 0.85rem;
-      padding: 0.65rem;
+      font-size: 0.82rem;
+      padding: 0.6rem;
       cursor: pointer;
       transition: all 0.15s;
+      margin-top: 1.25rem;
     }
 
-    button:hover {
-      border-color: #d1d5db;
-      color: #4b5563;
-      background: #f7f8fa;
+    .reset-btn:hover {
+      border-color: var(--sub-text);
+      color: var(--text);
+      background: var(--surface);
     }
   </style>
 </head>
 <body>
 <div class="card">
 
-  <h1>Distance Calculator</h1>
-  <p class="subtitle">Enter coordinates for two points in 2D space</p>
+  <div class="header">
+    <div>
+      <h1>Distance Calculator</h1>
+      <p class="subtitle">Euclidean distance between two 2D points</p>
+    </div>
+    <div class="toggle-wrap">
+      <span class="toggle-icon">☀️</span>
+      <label class="toggle">
+        <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" />
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+      <span class="toggle-icon">🌙</span>
+    </div>
+  </div>
 
   <div class="points">
     <div class="point-block">
@@ -259,7 +477,9 @@
       <div class="result-label">Distance</div>
       <div class="result-value" id="dist-display">1.0000</div>
     </div>
-    <div class="result-icon">📐</div>
+    <button class="copy-btn" onclick="copyResult()" id="copy-btn">
+      ⎘ Copy
+    </button>
   </div>
 
   <div class="sub-stats">
@@ -273,17 +493,28 @@
     </div>
   </div>
 
-  <div class="formula" id="formula-text"></div>
+  <div class="divider"></div>
 
-  <button onclick="resetPoints()">↺ Reset</button>
+  <div class="history-header">
+    <span class="history-title">History</span>
+    <button class="clear-btn" onclick="clearHistory()">Clear</button>
+  </div>
+  <div class="history-list" id="history-list">
+    <div class="history-empty" id="history-empty">No calculations yet</div>
+  </div>
+
+  <button class="reset-btn" onclick="resetPoints()">↺ Reset</button>
 
 </div>
 
 <script>
+  const history = [];
+  let debounceTimer = null;
+
   function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
 
   function fmt(n) {
-    if (Math.abs(n) >= 1e6)  return n.toExponential(2);
+    if (Math.abs(n) >= 1e9)  return n.toExponential(3);
     if (Math.abs(n) >= 1000) return n.toLocaleString('en', { maximumFractionDigits: 2 });
     return parseFloat(n.toFixed(4)).toString();
   }
@@ -296,10 +527,62 @@
     document.getElementById('dist-display').textContent = fmt(dist);
     document.getElementById('dx-display').textContent   = fmt(dx);
     document.getElementById('dy-display').textContent   = fmt(dy);
-    document.getElementById('formula-text').innerHTML   =
-      `√ ( (${bx} − ${ax})² + (${by} − ${ay})² )<br>` +
-      `= √ ( <strong>${fmt(dx*dx)}</strong> + <strong>${fmt(dy*dy)}</strong> )<br>` +
-      `= <strong>${fmt(dist)}</strong>`;
+
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => addHistory(ax, ay, bx, by, dist), 800);
+  }
+
+  function addHistory(ax, ay, bx, by, dist) {
+    const entry = { ax, ay, bx, by, dist };
+    const last = history[0];
+    if (last && last.ax === ax && last.ay === ay && last.bx === bx && last.by === by) return;
+    history.unshift(entry);
+    if (history.length > 6) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    const empty = document.getElementById('history-empty');
+    if (history.length === 0) {
+      empty.style.display = '';
+      list.querySelectorAll('.history-item').forEach(el => el.remove());
+      return;
+    }
+    empty.style.display = 'none';
+    list.querySelectorAll('.history-item').forEach(el => el.remove());
+    history.forEach((e, i) => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML =
+        `<span class="history-coords">A(${e.ax}, ${e.ay}) → B(${e.bx}, ${e.by})</span>` +
+        `<span class="history-dist">${fmt(e.dist)}</span>`;
+      item.onclick = () => restoreEntry(e);
+      list.appendChild(item);
+    });
+  }
+
+  function restoreEntry(e) {
+    document.getElementById('ax').value = e.ax;
+    document.getElementById('ay').value = e.ay;
+    document.getElementById('bx').value = e.bx;
+    document.getElementById('by').value = e.by;
+    update();
+  }
+
+  function clearHistory() {
+    history.length = 0;
+    renderHistory();
+  }
+
+  function copyResult() {
+    const val = document.getElementById('dist-display').textContent;
+    navigator.clipboard.writeText(val).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✓ Copied';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('copied'); }, 1500);
+    });
   }
 
   function resetPoints() {
@@ -307,6 +590,11 @@
       document.getElementById(id).value = [0, 1, 1, 1][i];
     });
     update();
+  }
+
+  function toggleTheme() {
+    const dark = document.getElementById('theme-toggle').checked;
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   }
 
   update();
